@@ -43,12 +43,12 @@
 import subprocess as s
 from os.path import expanduser
 
-SCR_NAME    = "snotify"
+SCR_NAME    = "datnotify"
 SCR_AUTHOR  = "Stephan Huebner <shuebnerfun01@gmx.org>"
 SCR_VERSION = "0.1.3"
 SCR_LICENSE = "GPL3"
 SCR_DESC    = "Play a soundfile for messages in choosable channels or queries"
-SCR_COMMAND = "snotify"
+SCR_COMMAND = "datnotify"
 
 import_ok = True
 
@@ -63,8 +63,8 @@ except:
 
 settings = {
 	"player" : "mplayer", # Application used to play a soundfile
-	"psound" : "", # Sound that should be played on private messages
-	"hsound" : "", # Sound that should be played on highlights
+	"psound" : "/home/dan/.weechat/sounds/beep.wav", # Sound that should be played on private messages
+	"hsound" : "/home/dan/.weechat/sounds/beep.wav", # Sound that should be played on highlights
 	"buffers" : ""
 }
 
@@ -79,8 +79,26 @@ def fn_hook_process(data, command, rc, stdout, stderr):
 def fn_privmsg(data, bufferp, time, tags, display, is_hilight, prefix, msg):
 	global bfList
 	global settings
+	alert("------")
+	alert("data: %s" % data)
+	alert("bufferp: %s" % bufferp)
+	alert("time: %s" % time)
+	alert("tags: %s" % tags)
+	alert("is_hilight: %s" % is_hilight)
+	alert("prefix: %s" % prefix)
+	alert("display: %s" % display)
+	alert("msg: %s" % msg)
+	alert("in privmsg")
+	alert("settings: %s" % settings)
+	s.Popen(["mplayer", expanduser("/home/dan/.weechat/sounds/beep.wav")], stderr=s.STDOUT, stdout=s.PIPE)
 	servername = (w.buffer_get_string(bufferp, "name").split("."))[0]
+	alert("servername: %s" % w.buffer_get_string(bufferp, "name"))
+	alert("-------")
+
 	ownNick = w.info_get("irc_nick", servername)
+	
+	#alert("bfList: %s" % bfList)
+
 	mySound = ""
 	if not muted and prefix != ownNick:
 		if settings["player"] == "":
@@ -99,7 +117,7 @@ def fn_privmsg(data, bufferp, time, tags, display, is_hilight, prefix, msg):
 								mySound = settings["psound"]
 						else:
 							mySound = lEntry["sound"]
-						s.Popen([settings["player"], expanduser(mySound)],
+						s.Popen([settings["player"], expanduser("/home/dan/.weechat/sounds/beep.wav")],
 								stderr=s.STDOUT, stdout=s.PIPE)
 					break
 	return w.WEECHAT_RC_OK
@@ -112,6 +130,7 @@ def fn_command(data, buffer, args):
 	mySound = ""
 	myBuffer = ""
 	if len(args)>0:
+		alert("settings in fn_command: %s" % settings)
 		try: # set a valid buffer and soundfile
 			myArg = args[1]
 			myBuffer = w.buffer_search("irc", myArg)
@@ -129,6 +148,9 @@ def fn_command(data, buffer, args):
 			mySound = settings["psound"]
 		myBuffer = w.buffer_get_string(myBuffer, "name")
 		if args[0] == "test":
+			alert("settings: %s" % settings)
+			alert("sound: %s" % mySound)
+			mySound= "/home/dan/.weechat/sounds/beep.wav"
 			if settings["psound"] == "":
 				errMsg("No sound defined! Please set 'psound'-option!")
 			else:
@@ -149,6 +171,7 @@ def fn_command(data, buffer, args):
 			alert("Sounds will be played")
 		elif args[0] == "add":
 			for listIndex in range(len(bfList)):
+				alert("index: %s" % listIndex)
 				if bfList[listIndex]["buffer"] == myBuffer:
 					bfList.pop(listIndex)
 					break
@@ -205,6 +228,7 @@ if __name__ == "__main__" and import_ok:
 	if w.register(SCR_NAME, SCR_AUTHOR, SCR_VERSION, SCR_LICENSE,
 						SCR_DESC, "", ""):
 		# synchronize weechat- and scriptsettings
+		alert("settings; %s" %settings)
 		for option, default_value in settings.items():
 			if not w.config_is_set_plugin(option):
 				w.config_set_plugin(option, default_value)
@@ -212,6 +236,7 @@ if __name__ == "__main__" and import_ok:
 				settings[option] = w.config_get_plugin(option)
 				if option == "buffers":	# need to set buffers seperately
 					myBuffers = settings[option][2:-2]
+					alert("buffers: %s" % myBuffers)
 					try:
 						myBuffers = myBuffers.split("'}{'")
 						for tmp in myBuffers:
