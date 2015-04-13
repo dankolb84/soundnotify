@@ -63,9 +63,9 @@ except:
 
 settings = {
 	"player" : "mplayer", # Application used to play a soundfile
-	"psound" : "/home/dan/.weechat/sounds/beep.wav", # Sound that should be played on private messages
+	"psound" : "/home/dan/.weechat/sounds/private.wav", # Sound that should be played on private messages
 	"hsound" : "/home/dan/.weechat/sounds/beep.wav", # Sound that should be played on highlights
-	"buffers" : ""
+	"channels" : "testchat,another"
 }
 
 def errMsg(myMsg):
@@ -79,11 +79,18 @@ def fn_hook_process(data, command, rc, stdout, stderr):
 def fn_privmsg(data, bufferp, time, tags, display, is_hilight, prefix, msg):
 	global bfList
 	global settings
-	chan_list = "#testchat"
-	#TODO
-	#update this to choose from list of rooms in settings
-	if is_hilight or chan_list in w.buffer_get_string(bufferp, "name"):
-		s.Popen(["mplayer", expanduser("/home/dan/.weechat/sounds/beep.wav")], stderr=s.STDOUT, stdout=s.PIPE)
+	if is_hilight:
+		#highlighted
+		s.Popen(["mplayer", expanduser(settings["hsound"])], stderr=s.STDOUT, stdout=s.PIPE)
+	elif '#' not in w.buffer_get_string(bufferp, "name") and w.buffer_get_string(bufferp, "name") > 1:
+		#private message
+		s.Popen(["mplayer", expanduser(settings["psound"])], stderr=s.STDOUT, stdout=s.PIPE)
+	else:
+		#in a channel being watched
+		for chan in settings["channels"].split(','):
+			if chan in w.buffer_get_string(bufferp, "name"):
+				s.Popen(["mplayer", expanduser(settings["hsound"])], stderr=s.STDOUT, stdout=s.PIPE)
+	
 	return w.WEECHAT_RC_OK
 
 def fn_command(data, buffer, args):
@@ -93,75 +100,76 @@ def fn_command(data, buffer, args):
 	myStatus = "on"
 	mySound = ""
 	myBuffer = ""
-	if len(args)>0:
-		alert("settings in fn_command: %s" % settings)
-		try: # set a valid buffer and soundfile
-			myArg = args[1]
-			myBuffer = w.buffer_search("irc", myArg)
-			if myBuffer == "":
-				# no buffer with that name, so so assume it's the soundfile
-				mySound = myArg
-				myBuffer = w.current_buffer()
-			else: # we have a buffer, now look for a soundfile
-				try:
-					mySound = args[2]
-				except:
-					mySound = ""
-		except: # no further arguments, so set valid buffer + sound
-			myBuffer = w.current_buffer()
-			mySound = settings["psound"]
-		myBuffer = w.buffer_get_string(myBuffer, "name")
-		if args[0] == "test":
-			alert("settings: %s" % settings)
-			alert("sound: %s" % mySound)
-			mySound= "/home/dan/.weechat/sounds/beep.wav"
-			if settings["psound"] == "":
-				errMsg("No sound defined! Please set 'psound'-option!")
-			else:
-				s.Popen([settings["player"], expanduser(mySound)],
-						  stderr=s.STDOUT, stdout=s.PIPE)
-		elif args[0] == "list":
-			for lEntry in bfList:
-				alert("BUFFER: " + lEntry["buffer"] + " | " +
-					  "STATUS: " + lEntry["status"] + " | " +
-					  "SOUND:  " + lEntry["sound"])
-			if len(bfList) == 0:
-				errMsg("No buffers configured!")
-		elif args[0] == "muteall":
-			muted = True
-			alert("All buffers are muted")
-		elif args[0] == "demuteall":
-			muted = False
-			alert("Sounds will be played")
-		elif args[0] == "add":
-			for listIndex in range(len(bfList)):
-				alert("index: %s" % listIndex)
-				if bfList[listIndex]["buffer"] == myBuffer:
-					bfList.pop(listIndex)
-					break
-			bfList += [{"buffer":myBuffer,"status":myStatus,"sound":mySound}]
-			if settings["psound"] == "":
-				settings["psound"] = mySound
-				w.config_set_plugin("psound", mySound)
-			w.config_set_plugin("buffers", fn_createBufferString())
-		elif args[0] == "remove":
-			for listIndex in range(len(bfList)):
-				if bfList[listIndex]["buffer"] == myBuffer:
-					bfList.pop(listIndex)
-					break
-			w.config_set_plugin("buffers", fn_createBufferString())
-		elif args[0] == "on":
-			for listIndex in range(len(bfList)):
-				if bfList[listIndex]["buffer"] == myBuffer:
-					bfList[listIndex]["status"] = "on"
-					w.config_set_plugin("buffers", fn_createBufferString())
-					break
-		elif args[0] == "off":
-			for lIndex in range(len(bfList)):
-				if bfList[lIndex]["buffer"] == myBuffer:
-					bfList[lIndex]["status"] = "off"
-					w.config_set_plugin("buffers", fn_createBufferString())
-					break
+	errMsg("Checkout the script, commands do nothing!")
+	#if len(args)>0:
+	#	alert("settings in fn_command: %s" % settings)
+	#	try: # set a valid buffer and soundfile
+	#		myArg = args[1]
+	#		myBuffer = w.buffer_search("irc", myArg)
+	#		if myBuffer == "":
+	#			# no buffer with that name, so so assume it's the soundfile
+	#			mySound = myArg
+	#			myBuffer = w.current_buffer()
+	#		else: # we have a buffer, now look for a soundfile
+	#			try:
+	#				mySound = args[2]
+	#			except:
+	#				mySound = ""
+	#	except: # no further arguments, so set valid buffer + sound
+	#		myBuffer = w.current_buffer()
+	#		mySound = settings["psound"]
+	#	myBuffer = w.buffer_get_string(myBuffer, "name")
+	#	if args[0] == "test":
+	#		alert("settings: %s" % settings)
+	#		alert("sound: %s" % mySound)
+	#		mySound= "/home/dan/.weechat/sounds/beep.wav"
+	#		if settings["psound"] == "":
+	#			errMsg("No sound defined! Please set 'psound'-option!")
+	#		else:
+	#			s.Popen([settings["player"], expanduser(mySound)],
+	#					  stderr=s.STDOUT, stdout=s.PIPE)
+	#	elif args[0] == "list":
+	#		for lEntry in bfList:
+	#			alert("BUFFER: " + lEntry["buffer"] + " | " +
+	#				  "STATUS: " + lEntry["status"] + " | " +
+	#				  "SOUND:  " + lEntry["sound"])
+	#		if len(bfList) == 0:
+	#			errMsg("No buffers configured!")
+	#	elif args[0] == "muteall":
+	#		muted = True
+	#		alert("All buffers are muted")
+	#	elif args[0] == "demuteall":
+	#		muted = False
+	#		alert("Sounds will be played")
+	#	elif args[0] == "add":
+	#		for listIndex in range(len(bfList)):
+	#			alert("index: %s" % listIndex)
+	#			if bfList[listIndex]["buffer"] == myBuffer:
+	#				bfList.pop(listIndex)
+	#				break
+	#		bfList += [{"buffer":myBuffer,"status":myStatus,"sound":mySound}]
+	#		if settings["psound"] == "":
+	#			settings["psound"] = mySound
+	#			w.config_set_plugin("psound", mySound)
+	#		w.config_set_plugin("buffers", fn_createBufferString())
+	#	elif args[0] == "remove":
+	#		for listIndex in range(len(bfList)):
+	#			if bfList[listIndex]["buffer"] == myBuffer:
+	#				bfList.pop(listIndex)
+	#				break
+	#		w.config_set_plugin("buffers", fn_createBufferString())
+	#	elif args[0] == "on":
+	#		for listIndex in range(len(bfList)):
+	#			if bfList[listIndex]["buffer"] == myBuffer:
+	#				bfList[listIndex]["status"] = "on"
+	#				w.config_set_plugin("buffers", fn_createBufferString())
+	#				break
+	#	elif args[0] == "off":
+	#		for lIndex in range(len(bfList)):
+	#			if bfList[lIndex]["buffer"] == myBuffer:
+	#				bfList[lIndex]["status"] = "off"
+	#				w.config_set_plugin("buffers", fn_createBufferString())
+	#				break
 	return w.WEECHAT_RC_OK
 
 def fn_createBufferString():
@@ -192,7 +200,7 @@ if __name__ == "__main__" and import_ok:
 	if w.register(SCR_NAME, SCR_AUTHOR, SCR_VERSION, SCR_LICENSE,
 						SCR_DESC, "", ""):
 		# synchronize weechat- and scriptsettings
-		alert("settings; %s" %settings)
+		#alert("settings; %s" %settings)
 		for option, default_value in settings.items():
 			if not w.config_is_set_plugin(option):
 				w.config_set_plugin(option, default_value)
