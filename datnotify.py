@@ -39,6 +39,8 @@
 #		* change: No sound is played anymore on messages from yourself.
 #		* fix: a new sound for an entry already in the list wasn't set.
 #		* change: Replaced "weechat.hook_process" with Pythons' "subprocess.Popen"
+#  2015-04-13: Version 0.2
+#		* heavily modified original work, simplified to play sound when expected
 
 import subprocess as s
 from os.path import expanduser
