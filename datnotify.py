@@ -67,7 +67,7 @@ settings = {
 	"player" : "mplayer", # Application used to play a soundfile
 	"psound" : "/home/dan/.weechat/sounds/private.wav", # Sound that should be played on private messages
 	"hsound" : "/home/dan/.weechat/sounds/beep.wav", # Sound that should be played on highlights
-	"channels" : "testchat,another"
+	"channels" : "nebops,nebopsadmins"
 }
 
 def errMsg(myMsg):
